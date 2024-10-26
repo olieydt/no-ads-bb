@@ -56,15 +56,17 @@ const useStyles = makeStyles()({
 
 const VideoList: React.FC<VideoListProps> = ({ searchQuery, onVideoSelect }) => {
     const { classes } = useStyles()
+    const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('')
     const [videos, setVideos] = useState<Video[]>([])
     const [page, setPage] = useState<number>(1)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     useEffect(() => {
-        if (searchQuery) {
+        if (currentSearchQuery !== searchQuery && searchQuery) {
             setVideos([])
             setPage(1)
             setHasMore(true)
+            setCurrentSearchQuery(searchQuery)
             fetchVideos(1)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +97,7 @@ const VideoList: React.FC<VideoListProps> = ({ searchQuery, onVideoSelect }) => 
         <InfiniteScroll
             dataLength={videos.length}
             next={() => fetchVideos(page)}
-            hasMore={hasMore}
+            hasMore={false}
             loader={<h4 className={classes.loader}>Loading...</h4>}
             endMessage={<p className={classes.endMessage}>No more videos</p>}
         >

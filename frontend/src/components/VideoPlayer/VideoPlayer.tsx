@@ -1,6 +1,6 @@
 // frontend/src/components/VideoPlayer/VideoPlayer.tsx
+
 import React, { useEffect, useRef, useState } from 'react'
-import Clappr from 'clappr'
 import { makeStyles } from 'tss-react/mui'
 
 interface VideoPlayerProps {
@@ -8,59 +8,52 @@ interface VideoPlayerProps {
 }
 
 const useStyles = makeStyles()({
-    clapprPlayerContainer: {
+    videoPlayerContainer: {
         width: '100%',
         height: '100%',
+        backgroundColor: '#000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    video: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
     },
 })
+
+const fetchStreamUrl = async (videoUrl: string): Promise<string> => {
+    try {
+        const response = await fetch(
+            `http://localhost:5000/api/video?url=${encodeURIComponent(videoUrl)}`
+        )
+        if (!response.ok) {
+            throw new Error('Network response was not ok')
+        }
+        const data = await response.json()
+        return data.streamUrl
+    } catch (error) {
+        console.error('Error fetching stream URL:', error)
+        return ''
+    }
+}
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
     const { classes } = useStyles()
     const [streamUrl, setStreamUrl] = useState<string>('')
-    const playerRef = useRef<HTMLDivElement>(null)
-    const playerInstance = useRef<Clappr.Player | null>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
-        const fetchStreamUrl = async () => {
-            try {
-                const response = await fetch(
-                    `http://localhost:5000/api/video?url=${encodeURIComponent(videoUrl)}`
-                )
-                if (!response.ok) {
-                    throw new Error('Network response was not ok')
-                }
-                const data = await response.json()
-                setStreamUrl(data.streamUrl)
-            } catch (error) {
-                console.error('Error fetching stream URL:', error)
-            }
-        }
-
-        fetchStreamUrl()
+        fetchStreamUrl(videoUrl).then(setStreamUrl)
     }, [videoUrl])
 
     useEffect(() => {
-        if (streamUrl && playerRef.current) {
-            // Destroy previous player if exists
-            if (playerInstance.current) {
-                playerInstance.current.destroy()
-            }
-
-            // Initialize Clappr player
-            playerInstance.current = new Clappr.Player({
-                source: streamUrl,
-                parent: playerRef.current,
-                autoPlay: true,
-                width: '100%',
-                height: '100%',
+        if (streamUrl && videoRef.current) {
+            videoRef.current.load()
+            videoRef.current.play().catch((error) => {
+                console.error('Error playing video:', error)
             })
-        }
-
-        // Cleanup on unmount
-        return () => {
-            if (playerInstance.current) {
-                playerInstance.current.destroy()
-            }
         }
     }, [streamUrl])
 
@@ -69,8 +62,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
     }
 
     return (
-        <div className={classes.clapprPlayerContainer}>
-            <div ref={playerRef}></div>
+        <div className={classes.videoPlayerContainer}>
+            <video
+                ref={videoRef}
+                className={classes.video}
+                controls
+                src={streamUrl}
+            >
+                Your browser does not support the video tag.
+            </video>
         </div>
     )
 }

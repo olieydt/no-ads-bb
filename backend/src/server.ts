@@ -1,5 +1,4 @@
-// backend/src/server.ts
-import express from 'express'
+import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { searchYouTube, getVideoStreamUrl } from './youtube'
 
@@ -9,13 +8,18 @@ const PORT = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+app.get('/', (req: Request, res: Response) => {
+    res.send('Hello World')
+})
+
 // Endpoint to search YouTube videos
-app.get('/api/search', async (req, res) => {
+app.get('/api/search', async (req: Request, res: Response) => {
     const query = req.query.q as string
     const page = parseInt(req.query.page as string) || 1
 
     if (!query) {
-        return res.status(400).json({ error: 'Query parameter "q" is required.' })
+        res.status(400).json({ error: 'Query parameter "q" is required.' })
+        return
     }
 
     try {
@@ -28,11 +32,12 @@ app.get('/api/search', async (req, res) => {
 })
 
 // Endpoint to get video stream URL
-app.get('/api/video', async (req, res) => {
+app.get('/api/video', async (req: Request, res: Response) => {
     const videoUrl = req.query.url as string
 
     if (!videoUrl) {
-        return res.status(400).json({ error: 'Query parameter "url" is required.' })
+        res.status(400).json({ error: 'Query parameter "url" is required.' })
+        return
     }
 
     try {

@@ -1,6 +1,11 @@
-// frontend/src/firebase.ts
 import { initializeApp } from 'firebase/app'
 import { getAuth, RecaptchaVerifier } from 'firebase/auth'
+
+declare global {
+    interface Window {
+        recaptchaVerifier: RecaptchaVerifier
+    }
+}
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,15 +18,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
+auth.useDeviceLanguage()
 
-// Initialize reCAPTCHA verifier
 export const setupRecaptcha = (containerId: string) => {
-    window.recaptchaVerifier = new RecaptchaVerifier(containerId, {
-        size: 'invisible',
-        callback: (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-    }, auth)
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible'
+    })
 }
 
 export { auth }

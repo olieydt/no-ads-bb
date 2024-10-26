@@ -1,6 +1,6 @@
 // frontend/src/App.tsx
 import React, { useEffect, useState } from 'react'
-import { auth, setupRecaptcha } from './firebase'
+import { auth } from './firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import PhoneAuth from './components/Auth/PhoneAuth'
 import Home from './components/Home/Home'
@@ -19,7 +19,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    setupRecaptcha('recaptcha-container')
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
     })

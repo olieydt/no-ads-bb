@@ -1,6 +1,6 @@
 // frontend/src/components/Auth/PhoneAuth.tsx
-import React, { useState } from 'react'
-import { auth } from '../../firebase'
+import React, { useEffect, useRef, useState } from 'react'
+import { auth, setupRecaptcha } from '../../firebase'
 import { signInWithPhoneNumber, RecaptchaVerifier, PhoneAuthProvider, signInWithCredential } from 'firebase/auth'
 import { makeStyles } from 'tss-react/mui'
 
@@ -43,6 +43,7 @@ const useStyles = makeStyles()({
 
 const PhoneAuth: React.FC = () => {
     const { classes } = useStyles()
+    const [hasSetupRecaptcha, setHasSetupRecaptcha] = useState<boolean>(false)
     const [phone, setPhone] = useState<string>('')
     const [otp, setOtp] = useState<string>('')
     const [verificationId, setVerificationId] = useState<string>('')
@@ -51,9 +52,8 @@ const PhoneAuth: React.FC = () => {
 
     const sendOtp = async () => {
         setError('')
-        const appVerifier = window.recaptchaVerifier as RecaptchaVerifier
         try {
-            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier)
+            const confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
             setVerificationId(confirmationResult.verificationId)
             setIsOtpSent(true)
         } catch (err: any) {
@@ -72,6 +72,14 @@ const PhoneAuth: React.FC = () => {
         }
     }
 
+    const sendOtpButtonRef = useRef<HTMLButtonElement>(null)
+    useEffect(() => {
+        if (!hasSetupRecaptcha && sendOtpButtonRef.current) {
+            setupRecaptcha('send-otp')
+            setHasSetupRecaptcha(true)
+        }
+    }, [hasSetupRecaptcha, sendOtpButtonRef.current])
+
     return (
         <div className={classes.authContainer}>
             {!isOtpSent ? (
@@ -84,7 +92,7 @@ const PhoneAuth: React.FC = () => {
                         onChange={(e) => setPhone(e.target.value)}
                         className={classes.input}
                     />
-                    <button onClick={sendOtp} className={classes.button}>
+                    <button ref={sendOtpButtonRef} id="send-otp" onClick={sendOtp} className={classes.button}>
                         Send OTP
                     </button>
                 </div>
