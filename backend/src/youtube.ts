@@ -1,8 +1,7 @@
 // backend/src/youtube.ts
 import { execSync } from 'child_process'
-import util from 'util'
 
-const RESULTS_PER_PAGE = 5
+const RESULTS_PER_PAGE = 20
 
 // Search YouTube using yt-dlp and return video details
 export const searchYouTube = async (query: string, page: number) => {

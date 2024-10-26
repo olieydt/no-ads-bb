@@ -1,6 +1,6 @@
 // frontend/src/components/VideoPlayer/VideoPlayer.tsx
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { makeStyles } from 'tss-react/mui'
 
 interface VideoPlayerProps {
@@ -48,8 +48,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
         fetchStreamUrl(videoUrl).then(setStreamUrl)
     }, [videoUrl])
 
+    const isVideoPlaying = useCallback(
+        (video: HTMLVideoElement) =>
+            !!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2),
+        []
+    )
     useEffect(() => {
-        if (streamUrl && videoRef.current) {
+        if (streamUrl && videoRef.current && !isVideoPlaying(videoRef.current)) {
             videoRef.current.load()
             videoRef.current.play().catch((error) => {
                 console.error('Error playing video:', error)

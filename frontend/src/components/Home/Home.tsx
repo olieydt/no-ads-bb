@@ -20,9 +20,7 @@ const useStyles = makeStyles()({
         position: 'fixed',
         top: 0,
         width: '100%',
-        padding: '10px',
         backgroundColor: '#fff',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         zIndex: 999,
     },
     logoutButton: {
@@ -91,7 +89,9 @@ const Home: React.FC = () => {
                     <VideoPlayer videoUrl={selectedVideo} />
                 </div>
             )}
-            <VideoList searchQuery={searchQuery} onVideoSelect={handleVideoSelect} />
+            {!selectedVideo && (
+                <VideoList searchQuery={searchQuery} onVideoSelect={handleVideoSelect} />
+            )}
         </div>
     )
 }

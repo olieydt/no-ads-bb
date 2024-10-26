@@ -1,5 +1,5 @@
 // frontend/src/components/Home/VideoList.tsx
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { makeStyles } from 'tss-react/mui'
 
@@ -22,6 +22,7 @@ const useStyles = makeStyles()({
         flexWrap: 'wrap',
         justifyContent: 'center',
         padding: '10px',
+        marginLeft: '50px',
     },
     videoItem: {
         width: '200px',
@@ -45,7 +46,7 @@ const useStyles = makeStyles()({
     },
     loader: {
         textAlign: 'center',
-        marginTop: '20px',
+        marginLeft: '10px'
     },
     endMessage: {
         textAlign: 'center',
@@ -59,6 +60,7 @@ const VideoList: React.FC<VideoListProps> = ({ searchQuery, onVideoSelect }) => 
     const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('')
     const [videos, setVideos] = useState<Video[]>([])
     const [page, setPage] = useState<number>(1)
+    const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     useEffect(() => {
@@ -72,8 +74,9 @@ const VideoList: React.FC<VideoListProps> = ({ searchQuery, onVideoSelect }) => 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery])
 
-    const fetchVideos = async (pageNumber: number) => {
+    const fetchVideos = useCallback(async (pageNumber: number) => {
         try {
+            setIsLoading(true)
             const response = await fetch(
                 `http://localhost:5000/api/search?q=${encodeURIComponent(searchQuery)}&page=${pageNumber}`
             )
@@ -85,34 +88,45 @@ const VideoList: React.FC<VideoListProps> = ({ searchQuery, onVideoSelect }) => 
                 setHasMore(false)
                 return
             }
-            setVideos((prev) => [...prev, ...newVideos])
+            const filteredVideos = newVideos.filter((video) => !videos.some((v) => v.id === video.id))
+            setVideos((prev) => [...prev, ...filteredVideos])
             setPage((prev) => prev + 1)
         } catch (error) {
             console.error('Error fetching videos:', error)
             setHasMore(false)
+        } finally {
+            setIsLoading(false)
         }
+    }, [searchQuery])
+
+    let loadingMessage = ''
+    if (isLoading) {
+        loadingMessage = 'Loading...'
+    } else if (!searchQuery) {
+        loadingMessage = 'Enter a search query to get started...'
+    } else if (videos.length === 0) {
+        loadingMessage = 'No videos found'
     }
 
     return (
         <InfiniteScroll
             dataLength={videos.length}
             next={() => fetchVideos(page)}
-            hasMore={false}
-            loader={<h4 className={classes.loader}>Loading...</h4>}
-            endMessage={<p className={classes.endMessage}>No more videos</p>}
+            hasMore={hasMore}
+            loader={<h4 className={classes.loader}>{loadingMessage}</h4>}
+            endMessage={<p className={classes.endMessage}>No more videos...</p>}
+            className={classes.videoList}
         >
-            <div className={classes.videoList}>
-                {videos.map((video) => (
-                    <div
-                        key={video.id}
-                        className={classes.videoItem}
-                        onClick={() => onVideoSelect(video.url)}
-                    >
-                        <img src={video.thumbnail} alt={video.title} className={classes.thumbnail} />
-                        <p className={classes.title}>{video.title}</p>
-                    </div>
-                ))}
-            </div>
+            {videos.map((video) => (
+                <div
+                    key={video.id}
+                    className={classes.videoItem}
+                    onClick={() => onVideoSelect(video.url)}
+                >
+                    <img src={video.thumbnail} alt={video.title} className={classes.thumbnail} />
+                    <p className={classes.title}>{video.title}</p>
+                </div>
+            ))}
         </InfiniteScroll>
     )
 }
